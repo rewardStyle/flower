@@ -5,11 +5,13 @@ import logging
 
 from datetime import datetime
 from threading import Thread
+from ast import literal_eval
 
 from tornado import web
 from tornado import gen
 from tornado.escape import json_decode
 from tornado.web import HTTPError
+from tornado.options import options
 
 from celery import states
 from celery.result import AsyncResult
@@ -139,7 +141,7 @@ Execute a task by name and wait results
 
         # In tornado for not blocking event loop we must return results
         # from other thread by self.finish()
-        th = Thread(target=self.wait_results, args=(result, response, ))
+        th = Thread(target=self.wait_results, args=(result, response,))
         th.start()
         # So just exit
 
@@ -447,6 +449,12 @@ List tasks
                 worker=worker, state=state):
             task = tasks.as_dict(task)
             task.pop('worker', None)
+            if options.literal_eval_args:
+                for name in ['args', 'kwargs', 'result']:
+                    try:
+                        task[name + '_e'] = literal_eval(task[name])
+                    except (ValueError, SyntaxError, TypeError):
+                        task[name + '_e'] = None
             result.append((task_id, task))
         self.write(dict(result))
 
@@ -557,4 +565,10 @@ Get a task info
                 response[name] = getattr(task, name, None)
         response['task-id'] = task.uuid
         response['worker'] = task.worker.hostname
+        if options.literal_eval_args:
+            for name in ['args', 'kwargs', 'result']:
+                try:
+                    response[name + '_e'] = literal_eval(getattr(task, name))
+                except (ValueError, SyntaxError, TypeError):
+                    response[name + '_e'] = None
         self.write(response)

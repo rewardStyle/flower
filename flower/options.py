@@ -62,6 +62,8 @@ define("tasks_columns", type=str,
        help="Slugs of columns on /tasks/ page, delimited by comma")
 define("auth_provider", default='flower.views.auth.GoogleAuth2LoginHandler',
        help="auth handler class")
+define("literal_eval_args", type=bool, default=False,
+       help="attempt basic ast.literal_eval on pickled fields (e.g., kwargs)")
 
 # deprecated options
 define("url_prefix", type=str, help="base url prefix")
