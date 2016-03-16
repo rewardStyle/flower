@@ -453,7 +453,7 @@ List tasks
                 for name in ['args', 'kwargs', 'result']:
                     try:
                         task[name + '_e'] = literal_eval(task[name])
-                    except:
+                    except (ValueError, SyntaxError, TypeError):
                         task[name + '_e'] = None
             result.append((task_id, task))
         self.write(dict(result))
@@ -569,6 +569,6 @@ Get a task info
             for name in ['args', 'kwargs', 'result']:
                 try:
                     response[name + '_e'] = literal_eval(getattr(task, name))
-                except:
+                except (ValueError, SyntaxError, TypeError):
                     response[name + '_e'] = None
         self.write(response)
